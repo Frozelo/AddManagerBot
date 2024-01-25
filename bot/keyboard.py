@@ -8,10 +8,6 @@ class CategoryRelationCallback(CallbackData, prefix="relation"):
     category_id: int
 
 
-class CategoryRelationDiscardCallback(CallbackData, prefix='discard'):
-    action: str
-
-
 def category_callback_inline_kb():
     builder = InlineKeyboardBuilder()
     builder.add(
@@ -30,13 +26,15 @@ def category_callback_inline_kb():
     return builder
 
 
-def choose_callback_inline_kb():
+def choose_callback_inline_kb(category_id):
     builder = InlineKeyboardBuilder()
     builder.add(
-        types.InlineKeyboardButton(text="Удалить",
-                                   callback_data=CategoryRelationDiscardCallback(action='delete_relation').pack()))
+        types.InlineKeyboardButton(text="Да",
+                                   callback_data=CategoryRelationCallback(action='remove',
+                                                                          category_id=category_id).pack()))
     builder.add(
-        types.InlineKeyboardButton(text="Отмена",
-                                   callback_data=CategoryRelationDiscardCallback(action='cancel').pack()))
+        types.InlineKeyboardButton(text="Нет",
+                                   callback_data=CategoryRelationCallback(action='cancel',
+                                                                          category_id=category_id).pack()))
 
     return builder

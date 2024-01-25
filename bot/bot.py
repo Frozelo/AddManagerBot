@@ -15,7 +15,7 @@ from aiogram.utils.markdown import hbold
 
 load_dotenv()
 TOKEN = getenv("BOT_TOKEN")
-WEBHOOK_URL = "your_fastapi_server_url/api"
+WEBHOOK_URL = "http://127.0.0.1:8000/api"
 
 
 
