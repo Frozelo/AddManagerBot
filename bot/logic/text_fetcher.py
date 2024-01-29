@@ -1,9 +1,12 @@
+import asyncio
 import re
 
 import requests
 from aiogram import types
-from aiogram.client import bot
 from aiogram.client.session import aiohttp
+from aiogram.exceptions import TelegramAPIError
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 CATEGORIES_KEYWORDS = {
     'smm': 1,
@@ -36,28 +39,36 @@ async def get_response_users(category_id):
 
 
 async def text_divider(message: str):
-    message_lower = message.lower()
+    keywords = extract_keywords(message)
+    for keyword, category in keywords:
+        if keyword in CATEGORIES_KEYWORDS:
+            return await get_response_users(CATEGORIES_KEYWORDS[keyword])
 
-    for keyword, category in CATEGORIES_KEYWORDS.items():
-        if keyword in message_lower:
-            return await get_response_users(category)
+
+def extract_keywords(message):
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform([message])
+    feature_names = vectorizer.get_feature_names_out()
+    tfidf_scores = tfidf_matrix.toarray()[0]
+    sorted_indices = tfidf_scores.argsort()[::-1]
+    keywords = [(feature_names[idx], tfidf_scores[idx]) for idx in sorted_indices]
+    return keywords
 
 
-# async def send_messages_to_users(users, from_user, message_date, message_id, message_text):
-#     messages_to_send = []
-#
-#     for user in users:
-#         try:
-#             message = types.Message(
-#                 chat=types.Chat(id=user['tg_id'], type='private'),
-#                 from_user=from_user,
-#                 date=message_date,
-#                 message_id=message_id,
-#                 text=message_text
-#             )
-#             messages_to_send.append(message)
-#         except Exception as e:
-#             print(f"Ошибка при создании сообщения для пользователя с ID {user['tg_id']}: {e}")
-#
-#     if messages_to_send:
-#         await bot.SendMessage(messages_to_send)
+async def send_message_async(my_bot, user_id, text):
+    try:
+        await my_bot.send_message(user_id, text)
+        print(f"Сообщение отправлено пользователю с ID {user_id}")
+    except TelegramAPIError as e:
+        print(f"Ошибка при отправке сообщения пользователю с ID {user_id}: {e}")
+
+
+async def send_messages_to_users(my_bot, users, message_text):
+    tasks = []
+    for user in users:
+        task = send_message_async(my_bot, user['tg_id'], message_text)
+        tasks.append(task)
+
+    await asyncio.gather(*tasks)
+
+

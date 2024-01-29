@@ -1,10 +1,9 @@
 from aiogram import types, Dispatcher, F
-from aiogram.enums import ParseMode
-from aiogram.exceptions import TelegramBadRequest, TelegramAPIError
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery
 
-from logic.text_fetcher import text_divider
+from bot import my_bot
+from logic.text_fetcher import text_divider, send_messages_to_users
 from keyboard import category_callback_inline_kb, choose_callback_inline_kb, CategoryRelationCallback
 import requests
 
@@ -73,25 +72,15 @@ async def callback_relation_discard(callback_query: types.CallbackQuery, ):
                           "DELETE")
 
 
-@dp.callback_query(CategoryRelationCallback.filter(F.action == 'cancel'))
+@dp.callback_query(CategoryRelationCallback.filter(F.action == 'category_remove_cancel'))
 async def callback_relation_discard(callback_query: types.CallbackQuery):
-    await callback_query.message.edit_text("Отменено")
+    await cmd_create_relation(message=callback_query.message)
 
 
 @dp.message((F.text.len() > 20))
 async def order_fetch_handler(message: types.Message):
     users = await text_divider(message.text)
-    print(users)
     if users:
-        for user in users:
-            try:
-                await message.bot.send_message(chat_id=user['tg_id'],
-                                               text=f'Найден новый заказ от '
-                                                    f'{message.from_user.username}'
-                                                    f' {message.from_user.url}'
-                                                    f'\n{message.text}')
-            except TelegramAPIError as e:
-                print(f"Ошибка при отправке сообщения пользователю с ID {user['tg_id']}: {e}")
-
-    else:
-        await message.answer("По этому тексту не удалось найти пользователя")
+        username_link = f'<a href="{message.from_user.url}">{message.from_user.username}</a>'
+        message_text = f'Найден новый заказ от {username_link}\n{message.text}'
+        await send_messages_to_users(my_bot=my_bot, users=users, message_text=message_text)

@@ -17,15 +17,14 @@ load_dotenv()
 TOKEN = getenv("BOT_TOKEN")
 WEBHOOK_URL = "http://127.0.0.1:8000/api"
 
-
+my_bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
 
 
 async def main() -> None:
     # Initialize Bot instance with a default parse mode which will be passed to all API calls
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
     from handlers import dp
     # And the run events dispatching
-    await dp.start_polling(bot)
+    await dp.start_polling(my_bot)
 
 
 if __name__ == "__main__":

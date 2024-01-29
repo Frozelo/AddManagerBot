@@ -34,7 +34,7 @@ def choose_callback_inline_kb(category_id):
                                                                           category_id=category_id).pack()))
     builder.add(
         types.InlineKeyboardButton(text="Нет",
-                                   callback_data=CategoryRelationCallback(action='cancel',
+                                   callback_data=CategoryRelationCallback(action='category_remove_cancel',
                                                                           category_id=category_id).pack()))
 
     return builder
