@@ -1,6 +1,7 @@
 import asyncio
 import re
 
+import numpy as np
 import requests
 from aiogram import types
 from aiogram.client.session import aiohttp
@@ -40,18 +41,23 @@ async def get_response_users(category_id):
 
 async def text_divider(message: str):
     keywords = extract_keywords(message)
+    print(keywords)
     for keyword, category in keywords:
         if keyword in CATEGORIES_KEYWORDS:
             return await get_response_users(CATEGORIES_KEYWORDS[keyword])
 
 
 def extract_keywords(message):
-    vectorizer = TfidfVectorizer()
+    vectorizer = TfidfVectorizer(ngram_range=(1, 3))
     tfidf_matrix = vectorizer.fit_transform([message])
     feature_names = vectorizer.get_feature_names_out()
     tfidf_scores = tfidf_matrix.toarray()[0]
+    norm = np.linalg.norm(tfidf_scores)
+    tfidf_scores = tfidf_scores / norm if norm != 0 else tfidf_scores
+
     sorted_indices = tfidf_scores.argsort()[::-1]
-    keywords = [(feature_names[idx], tfidf_scores[idx]) for idx in sorted_indices]
+    keywords = [(feature_names[idx], tfidf_scores[idx]) for idx in sorted_indices[:5]]
+
     return keywords
 
 
@@ -70,5 +76,3 @@ async def send_messages_to_users(my_bot, users, message_text):
         tasks.append(task)
 
     await asyncio.gather(*tasks)
-
-
