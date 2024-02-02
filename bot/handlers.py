@@ -9,7 +9,7 @@ import requests
 
 dp = Dispatcher()
 
-WEBHOOK_URL = "http://127.0.0.1:8000/api"
+WEBHOOK_URL = "http://127.0.0.1:8000/api/v1"
 
 
 async def handle_relation(callback_query: types.CallbackQuery, success_text: str, error_text: str, method: str):
@@ -59,6 +59,12 @@ async def cmd_create_relation(message: types.Message):
     await message.answer('На какую категорию вы хотите подписаться?',
                          reply_markup=category_callback_inline_kb().as_markup())
 
+
+@dp.message(Command('show_relation'))
+async def cmd_get_relations(message: types.Message):
+    tg_id = message.from_user.id
+    response = requests.get(WEBHOOK_URL + f"/user/{tg_id}/categories")
+    await message.answer(response.text)
 
 @dp.callback_query(CategoryRelationCallback.filter(F.action == 'add'))
 async def callback_relation(callback_query: types.CallbackQuery):
