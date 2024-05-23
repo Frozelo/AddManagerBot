@@ -9,7 +9,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 CATEGORIES_KEYWORDS = {
     'smm': 1,
-    'cмм': 1,
     'смм': 1,
     'context': 2,
     'контекстная реклама': 2,
@@ -30,7 +29,7 @@ WEBHOOK_URL = "http://127.0.0.1:8000/api/v1"
 async def get_response_users(category_id):
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(WEBHOOK_URL + f"/category/{category_id}") as response:
+            async with session.get(WEBHOOK_URL + f"/users/category/{category_id}") as response:
                 response.raise_for_status()
                 return await response.json()
         except aiohttp.ClientError as e:
